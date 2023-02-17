@@ -20,7 +20,6 @@
 import argparse
 import multiprocessing
 import os
-from pickle import GLOBAL
 import sys
 
 import lm_dataformat as lmd
