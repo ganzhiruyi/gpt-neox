@@ -659,6 +659,7 @@ class NeoXArgsTokenizer(NeoXArgsTemplate):
         "SPMTokenizer",
         "CharLevelTokenizer",
         "TiktokenTokenizer",
+        "HFGPTNeoXTokenizerFast",
     ] = "GPT2BPETokenizer"
     """
     Type of tokenizer to use - should be one of ["GPT2BPETokenizer", "HFTokenizer", "HFGPT2Tokenizer", "SPMTokenizer", "CharLevelTokenizer", "TiktokenTokenizer"]
@@ -687,6 +688,11 @@ class NeoXArgsTraining(NeoXArgsTemplate):
     Path to combined dataset to split.
     """
 
+    indexmap_data_path: str = None
+    """
+    Path to indexmap file, for reuse same data_path in different experiments.
+    """
+    
     use_shared_fs: bool = True
     """
     Whether to use a shared filesystem for data loading. If False, local rank 0 on all nodes will preprocess the data,
