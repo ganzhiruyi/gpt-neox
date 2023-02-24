@@ -160,7 +160,7 @@ def get_args():
     return args
 
 
-def yield_from_files(fnames: list, semaphore):
+def yield_from_files(fnames: list, semaphore,key='text'):
     """
     Iterator over input documents using lm_dataformat. Should be able to handle jsons / texts /
     other compressed formats. Also filters out empty documents.
@@ -169,7 +169,7 @@ def yield_from_files(fnames: list, semaphore):
     """
 
     def yielder(fname, semaphore):
-        for f in filter(lambda x: x, lmd.Reader(fname).stream_data()):
+        for f in filter(lambda x: x, lmd.Reader(fname).stream_data(key=key)):
             semaphore.acquire()
             yield f
 
@@ -191,7 +191,7 @@ def main():
     semaphore = Semaphore(10000 + args.workers)
 
     # use multiprocessing to iterate over input documents
-    fin = yield_from_files(args.input.split(","), semaphore)
+    fin = yield_from_files(args.input.split(","), semaphore,key=args.jsonl_keys[0])
 
     if args.workers > 1:
         pool = multiprocessing.Pool(args.workers, initializer=encoder.initializer)
@@ -221,6 +221,7 @@ def main():
     # actually do tokenization
     proc_start = time.time()
     total_bytes_processed = 0
+    total_tokens_processed = 0
     pbar = tqdm.tqdm()
     for i, (doc, bytes_processed) in enumerate(encoded_docs, start=1):
         total_bytes_processed += bytes_processed
@@ -231,6 +232,7 @@ def main():
         # add each tokenized document / sentence
         for key, sentences in doc.items():
             for sentence in sentences:
+                total_tokens_processed += len(sentence)
                 builders[key].add_item(np.array(sentence, dtype=builders[key].dtype))
             # separate with eos token
             builders[key].end_document()
@@ -241,7 +243,7 @@ def main():
             elapsed = current - proc_start
             mbs = total_bytes_processed / elapsed / 1024 / 1024
             pbar.set_description(
-                f"Processed {i}{'' if args.num_docs is None else '/' + str(args.num_docs)} documents ({i / elapsed} docs/s, {mbs} MB/s)."
+                f"Processed {i}{'' if args.num_docs is None else '/' + str(args.num_docs)} documents {total_tokens_processed} tokens ({i / elapsed} docs/s, {mbs} MB/s)."
             )
             if i != 0:
                 pbar.update(args.log_interval)
@@ -249,6 +251,9 @@ def main():
     # save output file
     for key in args.jsonl_keys:
         builders[key].finalize(output_idx_files[key])
+
+    with open(f'{args.output_prefix}-token_counts.txt','w',encoding='utf-8') as w:
+        w.writelines(f'{total_tokens_processed} tokens')
 
 
 if __name__ == "__main__":
