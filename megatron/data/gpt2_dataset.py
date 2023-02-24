@@ -37,7 +37,8 @@ class GPT2Dataset(torch.utils.data.Dataset):
         seq_length,
         seed,
         build_index_mappings=True,
-        use_shared_fs=True
+        use_shared_fs=True,
+        indexmap_data_prefix=None,
     ):
 
         self.name = name
@@ -57,7 +58,8 @@ class GPT2Dataset(torch.utils.data.Dataset):
                 num_samples,
                 seq_length,
                 seed,
-                use_shared_fs=use_shared_fs
+                use_shared_fs=use_shared_fs,
+                indexmap_data_prefix=indexmap_data_prefix
             )
             self.shuffle_idx_len = self.shuffle_idx.shape[0] - 1
             self.sample_idx_len = self.sample_idx.shape[0] - 1
@@ -112,7 +114,7 @@ class GPT2Dataset(torch.utils.data.Dataset):
 
 
 def _build_index_mappings(
-    name, data_prefix, documents, sizes, num_samples, seq_length, seed, use_shared_fs=True
+    name, data_prefix, documents, sizes, num_samples, seq_length, seed, use_shared_fs=True, indexmap_data_prefix=None
 ):
     """Build doc-idx, sample-idx, and shuffle-idx.
     doc-idx: is an array (ordered) of documents to be used in training.
@@ -127,7 +129,7 @@ def _build_index_mappings(
     np_rng = np.random.RandomState(seed=seed)
 
     # Filename of the index mappings.
-    _filename = data_prefix
+    _filename = data_prefix if indexmap_data_prefix is None else indexmap_data_prefix
     _filename += "_{}_indexmap".format(name)
     _filename += "_{}ns".format(num_samples)
     _filename += "_{}sl".format(seq_length)

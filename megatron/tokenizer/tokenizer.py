@@ -53,7 +53,7 @@ def build_tokenizer(args):
             )
         tokenizer = HFGPT2Tokenizer(args.vocab_file)
     elif args.tokenizer_type.lower() == "HFGPTNeoXTokenizerFast".lower():
-        if args.vocab_file is None or os.path.isdir(args.vocab_file):
+        if args.vocab_file is None or os.path.isdir(args.vocab_file)==False:
             print(
                 "WARNING: No vocab dir found, loading Huggingface's pretrained GPTNeoXTokenizerFast"
             )
