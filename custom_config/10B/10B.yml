@@ -1,15 +1,13 @@
 {
-  "vocab-file": "../custom_config/10B/20B_tokenizer.json",
+  "vocab-file": "/cognitive_comp/yangping/nlp/gpt-neox/custom_config/10B/20B_tokenizer.json",
   "save": "../workspace/10B/checkpoints",
-  "load": "../workspace/10B/checkpoints",
+  "load": "/cognitive_comp/wuziwei/codes/gpt-neox/workspace/10B/checkpoints",
   "tokenizer_type": "HFTokenizer",
   "tensorboard-dir": "../workspace/10B/tensorboard",
-  "data-path": "../data/mydataset_text_document",
-  
   "use_wandb": false,
   "launcher": "slurm",
   "deepspeed_slurm": false,
-  "global_num_gpus": 64,
+  "global_num_gpus": 32,
 
   "pipe-parallel-size": 4,
   "model-parallel-size": 2,
@@ -39,6 +37,10 @@
       },
 
   "min_lr": 0.97e-5,
+
+  "eval_tasks":[
+                "webqa",
+            ],
 
   "zero_optimization": {
   "stage": 1,

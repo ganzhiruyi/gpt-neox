@@ -1,15 +1,14 @@
 {
   "vocab-file": "../custom_config/10B/20B_tokenizer.json",
   "save": "../workspace/01B/checkpoints",
-  "load": "/cognitive_comp/yangping/nlp/gpt-neox0/workspace/01B/checkpoints",
+  "load": "/cognitive_comp/yangping/nlp/gpt-neox/workspace/01B/checkpoints/global_step1000",
   "tokenizer_type": "HFTokenizer",
   "tensorboard-dir": "../workspace/10B/tensorboard",
-  "data-path": "/cognitive_comp/yangping/data/unidata/qadata/eval_test/eval_test_text_document",
   
   "use_wandb": false,
   "launcher": "slurm",
   "deepspeed_slurm": false,
-  "global_num_gpus": 1,
+  "global_num_gpus": 8,
 
   "pipe-parallel-size": 1,
   "model-parallel-size": 1,
@@ -22,7 +21,6 @@
                 "winogrande",
                 "mathqa",
                 "pubmedqa",
-                "triviaqa",
                 "ocnli",
                 "lcsts",
                 "c3",
@@ -67,7 +65,7 @@
   "reduce_bucket_size": 1260000000,
   "contiguous_gradients": true
   },
-  "train_micro_batch_size_per_gpu": 128,
+  "train_micro_batch_size_per_gpu": 8,
   "gradient_accumulation_steps": 64,
   "data-impl": "mmap",
   "split": "995,4,1",
