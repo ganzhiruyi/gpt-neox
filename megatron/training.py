@@ -21,6 +21,7 @@
 """Pretrain utilities."""
 from datetime import datetime
 from functools import partial
+from lib2to3.pgen2 import token
 
 import math
 import sys
@@ -181,9 +182,9 @@ def _get_batch(neox_args, tokenizer, keys, data, datatype):
     global SHOW_DATA
     if SHOW_DATA:
         SHOW_DATA = False
-        print_rank_0('tokens: {}'.format(tokens[0]))
-        print_rank_0('labels: {}'.format(labels[0]))
-        print_rank_0('attention_mask: {}'.format(attention_mask[0]))
+        print_rank_0('tokens: {}, shape: {}'.format(tokens[0], tokens.shape))
+        print_rank_0('labels: {}, shape: {}'.format(labels[0], labels.shape))
+        print_rank_0('attention_mask: {}, shape: {}'.format(attention_mask[0], attention_mask.shape))
         print_rank_0('loss_mask: {}'.format(loss_mask[0]))
         print_rank_0('position_ids: {}'.format(position_ids[0]))
 

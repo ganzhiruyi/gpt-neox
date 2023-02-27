@@ -1,12 +1,20 @@
 {
   "vocab-file": "/cognitive_comp/common_data/BPETokenizer-Mix-NEO-pre",
-  "save": "./workspace/gpt_neox6B_v1/checkpoints_test",
-  "load": "./workspace/gpt_neox6B_v1/checkpoints_test",
+  "save": "./workspace/gpt_neox6B_v1/checkpoints_v1",
+  "load": "./workspace/gpt_neox6B_v1/checkpoints_v1",
 
-  "data-path": "/cognitive_comp/wuziwei/task/academicGPT/wudao_for_test/wudao180_text_document",
-  "indexmap-data-path": "/cognitive_comp/ganruyi/gpt-neox/workspace/gpt_neox6B_v1/data/wudao180_text_document",
+  "train-data-paths": ["/cognitive_comp/wuziwei/task/academicGPT/ftfy_wudao/wudao180_text_document", "/cognitive_comp/wuziwei/task/academicGPT/ftfy_zh_sup/zh_sup_text_document","/cognitive_comp/wuziwei/task/academicGPT/ftfy_zh_unsup/zh_unsup_content_document","/cognitive_comp/wuziwei/task/academicGPT/noftfy_pile/pile-p1_text_document","/cognitive_comp/wuziwei/task/academicGPT/noftfy_pile/pile-p2_text_document","/cognitive_comp/wuziwei/task/academicGPT/noftfy_pile/pile-p3_text_document","/cognitive_comp/wuziwei/task/academicGPT/noftfy_pile/pile-p4_text_document","/cognitive_comp/wuziwei/task/academicGPT/noftfy_pile/pile-p5_text_document","/cognitive_comp/wuziwei/task/academicGPT/noftfy_pile/pile-p6_text_document"],
+  "test-data-paths": ["/cognitive_comp/wuziwei/task/academicGPT/ftfy_test_val_set/pile_test_text_document"],
+  "valid-data-paths": ["/cognitive_comp/wuziwei/task/academicGPT/ftfy_test_val_set/pile_val_text_document"],
+  "train-data-weights": [1., 1.,1., 1.,1., 1.,1., 1.,1.],
+  "test-data-weights": [1.],
+  "valid-data-weights": [1.],
+  "train-indexmap-data-paths": ["/cognitive_comp/ganruyi/gpt-neox/workspace/gpt_neox6B_v1/data/wudao180_text_document", "/cognitive_comp/ganruyi/gpt-neox/workspace/gpt_neox6B_v1/data/zh_sup_text_document","/cognitive_comp/ganruyi/gpt-neox/workspace/gpt_neox6B_v1/data/zh_unsup_content_document","/cognitive_comp/ganruyi/gpt-neox/workspace/gpt_neox6B_v1/data/pile-p1_text_document","/cognitive_comp/ganruyi/gpt-neox/workspace/gpt_neox6B_v1/data/pile-p2_text_document","/cognitive_comp/ganruyi/gpt-neox/workspace/gpt_neox6B_v1/data/pile-p3_text_document","/cognitive_comp/ganruyi/gpt-neox/workspace/gpt_neox6B_v1/data/pile-p4_text_document","/cognitive_comp/ganruyi/gpt-neox/workspace/gpt_neox6B_v1/data/pile-p5_text_document","/cognitive_comp/ganruyi/gpt-neox/workspace/gpt_neox6B_v1/data/pile-p6_text_document"],
+  "test-indexmap-data-paths": ["/cognitive_comp/ganruyi/gpt-neox/workspace/gpt_neox6B_v1/data/pile_test_text_document"],
+  "valid-indexmap-data-paths": ["/cognitive_comp/ganruyi/gpt-neox/workspace/gpt_neox6B_v1/data/pile_val_text_document"],
+  
   "use_wandb": true,
-  "wandb_project": "gpt_neox6B_test",
+  "wandb_project": "gpt_neox6B_v1_20230227",
   "launcher": "slurm",
   "deepspeed_slurm": false,
   "global_num_gpus": 192,
@@ -18,8 +26,8 @@
   "num-layers": 40,
   "hidden-size": 3584,
   "num-attention-heads": 28,
-  "seq-length": 2048,
-  "max-position-embeddings": 2048,
+  "seq-length": 8192,
+  "max-position-embeddings": 8192,
   "norm": "layernorm",
   "pos-emb": "rotary",
   "rotary_pct": 0.25,
@@ -44,13 +52,13 @@
   "zero_optimization": {
   "stage": 1,
   "allgather_partitions": true,
-  "allgather_bucket_size": 500000000,
+  "allgather_bucket_size": 1250000000,
   "overlap_comm": true,
   "reduce_scatter": true,
-  "reduce_bucket_size": 500000000,
+  "reduce_bucket_size": 1250000000,
   "contiguous_gradients": true
   },
-  "train_micro_batch_size_per_gpu": 4,
+  "train_micro_batch_size_per_gpu": 1,
   "gradient_accumulation_steps": 32,
   "data-impl": "mmap",
   "split": "995,4,1",
@@ -75,13 +83,13 @@
     "min_loss_scale": 1
     },
 
-  "train-iters": 10000,
-  "lr-decay-iters": 10000,
+  "train-iters": 20400,
+  "lr-decay-iters": 20400,
 
   "distributed-backend": "nccl",
   "lr-decay-style": "cosine",
   "warmup": 0.01,
-  "checkpoint-factor": 500, 
+  "checkpoint-factor": 1000, 
   "eval-interval": 1000,
   "eval-iters": 100,
 
@@ -90,7 +98,7 @@
   "wall_clock_breakdown": false,
 
   "tokenizer_type": "HFGPTNeoXTokenizerFast",
-  "tensorboard-dir": "./workspace/gpt_neox6B_v1/tensorboard_test",
-  "log-dir": "./workspace/gpt_neox6B_v1/logs_test",
+  "tensorboard-dir": "./workspace/gpt_neox6B_v1/tensorboard_v1",
+  "log-dir": "./workspace/gpt_neox6B_v1/logs_v1",
   "checkpoint_validation_with_forward_pass": false
 }
