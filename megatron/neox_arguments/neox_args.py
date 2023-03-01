@@ -714,6 +714,21 @@ class NeoXArgsTraining(NeoXArgsTemplate):
     List of paths to validation datasets.
     """
 
+    train_indexmap_data_paths: list = None
+    """
+    List of indexmap file paths to train datasets.
+    """
+
+    test_indexmap_data_paths: list = None
+    """
+    List of indexmap file paths to test datasets.
+    """
+
+    valid_indexmap_data_paths: list = None
+    """
+    List of indexmap file paths to validation datasets.
+    """
+
     train_data_weights: list = None
     """
     List of 'weights' that decide how often to sample from each training dataset when blending datasets. If None, defaults to equal weighting.

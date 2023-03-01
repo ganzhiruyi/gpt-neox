@@ -199,15 +199,17 @@ def build_weighted_datasets(
     valid_weights,
     test_weights,
     build_index_mappings=True,
-    indexmap_data_prefix=None,
 ):
     # build individual datasets
     train_datasets, valid_datasets, test_datasets = [], [], []
-    for i, (train_path, valid_path, test_path) in enumerate(
+    for i, (train_path, valid_path, test_path, train_indexmap_data_prefix, valid_indexmap_data_prefix, test_indexmap_data_prefix) in enumerate(
         zip_longest(
             neox_args.train_data_paths,
             neox_args.valid_data_paths,
             neox_args.test_data_paths,
+            neox_args.train_indexmap_data_paths,
+            neox_args.valid_indexmap_data_paths,
+            neox_args.test_indexmap_data_paths,
         )
     ):
         if train_path:
@@ -221,7 +223,7 @@ def build_weighted_datasets(
                     seed=neox_args.seed,
                     skip_warmup=(not neox_args.mmap_warmup),
                     build_index_mappings=build_index_mappings,
-                    indexmap_data_prefix=indexmap_data_prefix,
+                    indexmap_data_prefix=train_indexmap_data_prefix,
                 )
             )
 
@@ -236,7 +238,7 @@ def build_weighted_datasets(
                     seed=neox_args.seed,
                     skip_warmup=(not neox_args.mmap_warmup),
                     build_index_mappings=build_index_mappings,
-                    indexmap_data_prefix=indexmap_data_prefix,
+                    indexmap_data_prefix=valid_indexmap_data_prefix,
                 )
             )
 
@@ -251,7 +253,7 @@ def build_weighted_datasets(
                     seed=neox_args.seed,
                     skip_warmup=(not neox_args.mmap_warmup),
                     build_index_mappings=build_index_mappings,
-                    indexmap_data_prefix=indexmap_data_prefix,
+                    indexmap_data_prefix=test_indexmap_data_prefix,
                 )
             )
     return train_datasets, valid_datasets, test_datasets
@@ -343,7 +345,6 @@ def build_train_valid_test_data_iterators(neox_args):
                 valid_weights,
                 test_weights,
                 build_index_mappings=not neox_args.weight_by_num_documents,
-                indexmap_data_prefix=neox_args.indexmap_data_path,
             )
 
             if neox_args.weight_by_num_documents:
