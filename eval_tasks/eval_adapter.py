@@ -12,6 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from .eval_fengshen import all_tasks_zh, get_task_dict_zh
+from megatron import mpu
+from megatron.text_generation_utils import generate_samples_from_prompt
+from lm_eval import tasks, evaluator, utils, base
+from lm_eval.models.gpt2 import GPT2LM
+import torch.nn.functional as F
+import torch
+from tqdm import tqdm
+from functools import partial
+import dataclasses
+import sys
+import os
 from megatron.utils import is_local_main, print_rank_0
 import best_download
 
@@ -26,22 +38,10 @@ def _download_file(*args, **kwargs):
 
 best_download.download_file = _download_file
 
-import os
-import sys
-import dataclasses
-from functools import partial
 
 sys.path.append(
     os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir))
 )
-from tqdm import tqdm
-import torch
-import torch.nn.functional as F
-
-from lm_eval.models.gpt2 import GPT2LM
-from lm_eval import tasks, evaluator, utils, base
-from megatron.text_generation_utils import generate_samples_from_prompt
-from megatron import mpu
 
 
 class EvalHarnessAdapter(GPT2LM):
@@ -140,7 +140,8 @@ class EvalHarnessAdapter(GPT2LM):
         :param requests: Dictionary of requests containing the context (prompt) and 'until' - a token or
                          list of stop tokens.
         """
-        self.model.module.inference_mode(use_cache=True)  # tell model to cache kv pairs
+        self.model.module.inference_mode(
+            use_cache=True)  # tell model to cache kv pairs
         res = []
 
         def _collate(x):
@@ -202,7 +203,8 @@ class EvalHarnessAdapter(GPT2LM):
                 for cache_key, context_enc, continuation_enc in chunk:
                     # when too long to fit in context, truncate from the left
                     inp = torch.tensor(
-                        (context_enc + continuation_enc)[-(self.max_length + 1) :][:-1],
+                        (context_enc +
+                         continuation_enc)[-(self.max_length + 1):][:-1],
                         dtype=torch.long,
                     ).to(self.device)
                     (inplen,) = inp.shape
@@ -233,12 +235,13 @@ class EvalHarnessAdapter(GPT2LM):
                 res_len += len(chunk)
 
                 if logits is not None:
-                    multi_logits = F.log_softmax(logits, dim=-1)  # [batch, seq, vocab]
+                    multi_logits = F.log_softmax(
+                        logits, dim=-1)  # [batch, seq, vocab]
                     for (cache_key, _, _), logits, inp, inplen, cont_toks in zip(
                         chunk, multi_logits, inps, inplens, contlens
                     ):
                         contlen = len(cont_toks)
-                        logits = logits[inplen - contlen : inplen].unsqueeze(
+                        logits = logits[inplen - contlen: inplen].unsqueeze(
                             0
                         )  # [1, seq, vocab]
                         greedy_tokens = logits.argmax(dim=-1)
@@ -266,13 +269,15 @@ class EvalHarnessAdapter(GPT2LM):
 
             # broadcast results to all ranks
             if self.is_pipe_parallel:
-                src_rank = self.model.grid.stage_to_global(self.model.num_stages - 1)
+                src_rank = self.model.grid.stage_to_global(
+                    self.model.num_stages - 1)
                 if res:
                     logits_sums, max_equals = list(zip(*res))
                     logits_sums = torch.FloatTensor(logits_sums).cuda()
                     max_equals = torch.LongTensor(max_equals).cuda()
                 else:
-                    logits_sums = torch.zeros(res_len, dtype=torch.float32).cuda()
+                    logits_sums = torch.zeros(
+                        res_len, dtype=torch.float32).cuda()
                     max_equals = torch.zeros(res_len, dtype=torch.int64).cuda()
                 torch.distributed.broadcast(
                     tensor=logits_sums,
@@ -299,7 +304,8 @@ class EvalHarnessAdapter(GPT2LM):
         if batch_size % self.dp_world_size != 0:
             # The last batch could potentially not fill the full batch size (if the dataset size is not divisible by batch size)
             # In this case we pad the batch
-            padded_size = self.dp_world_size - (batch_size % self.dp_world_size)
+            padded_size = self.dp_world_size - \
+                (batch_size % self.dp_world_size)
 
             print_rank_0(
                 f"WARNING: Batch size ({batch_size}) must be divisible by dp world size ({self.dp_world_size}). Padding inputs to {padded_size}."
@@ -316,7 +322,7 @@ class EvalHarnessAdapter(GPT2LM):
 
         # get a chunk for each data parallel rank
         chunk_size = inps.shape[0] // self.dp_world_size
-        inps = inps[self.dp_rank * chunk_size : (self.dp_rank + 1) * chunk_size]
+        inps = inps[self.dp_rank * chunk_size: (self.dp_rank + 1) * chunk_size]
         # make a dummy dataloader / iterator to pass to model
         # we need to do this because deepspeed pipe parallel only takes an iterator
         # in this format
@@ -327,7 +333,8 @@ class EvalHarnessAdapter(GPT2LM):
         Gather logits from all data parallel ranks
         """
         if logits is not None:
-            tensor_list = [torch.zeros_like(logits) for _ in range(self.dp_world_size)]
+            tensor_list = [torch.zeros_like(logits)
+                           for _ in range(self.dp_world_size)]
             torch.distributed.all_gather(
                 tensor_list, logits, group=mpu.get_data_parallel_group()
             )
@@ -398,7 +405,16 @@ class EvalHarnessAdapter(GPT2LM):
                     task_names.add(matching)
             return list(task_names)
 
-        eval_tasks = pattern_match(eval_tasks, tasks.ALL_TASKS)
+        eval_tasks_en = []
+        eval_tasks_zh = []
+
+        for et in eval_tasks:
+            if et not in all_tasks_zh:
+                eval_tasks_en.append(et)
+            else:
+                eval_tasks_zh.append(et)
+
+        eval_tasks_en = pattern_match(eval_tasks_en, tasks.ALL_TASKS)
         print(f"Found tasks: {eval_tasks}")
 
         # **HACK INCOMING**:
@@ -406,11 +422,21 @@ class EvalHarnessAdapter(GPT2LM):
         # the tasks are downloaded *as they are initialized*, and the downloads don't like multithreading.
         # so we download them once on the local main rank, wait, and then initialize them on all other ranks, which *should* load from the cache.
         if self.is_local_main:
-            task_dict = tasks.get_task_dict(eval_tasks)
+            task_dict_en = tasks.get_task_dict(eval_tasks_en)
+            task_dict_zh = get_task_dict_zh(eval_tasks_zh)
+
         # torch barrier
         if torch.distributed.is_initialized():
             torch.distributed.barrier()
-        task_dict = tasks.get_task_dict(eval_tasks)
+
+        task_dict_en = tasks.get_task_dict(eval_tasks_en)
+        task_dict_zh = get_task_dict_zh(eval_tasks_zh)
+
+        task_dict = {}
+        for k, v in task_dict_en.items():
+            task_dict[k] = v
+        for k, v in task_dict_zh.items():
+            task_dict[k] = v
 
         lm = self
         if use_cache:
@@ -420,7 +446,7 @@ class EvalHarnessAdapter(GPT2LM):
 
         results = evaluator.evaluate(
             lm=lm,
-            task_dict=tasks.get_task_dict(eval_tasks),
+            task_dict=task_dict,
             description_dict=description_dict,
             num_fewshot=num_fewshot,
             limit=limit,

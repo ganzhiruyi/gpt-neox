@@ -1,22 +1,40 @@
 {
-  "vocab-file": "/cognitive_comp/yangping/nlp/gpt-neox/custom_config/10B/20B_tokenizer.json",
-  "save": "../workspace/10B/checkpoints",
-  "load": "/cognitive_comp/wuziwei/codes/gpt-neox/workspace/10B/checkpoints",
+  "vocab-file": "../custom_config/10B/20B_tokenizer.json",
+  "save": "../workspace/01B/checkpoints",
+  "load": "/cognitive_comp/yangping/nlp/gpt-neox/workspace/01B/checkpoints/global_step1000",
   "tokenizer_type": "HFTokenizer",
   "tensorboard-dir": "../workspace/10B/tensorboard",
+  
   "use_wandb": false,
   "launcher": "slurm",
   "deepspeed_slurm": false,
-  "global_num_gpus": 32,
+  "global_num_gpus": 8,
 
-  "pipe-parallel-size": 4,
-  "model-parallel-size": 2,
+  "pipe-parallel-size": 1,
+  "model-parallel-size": 1,
 
-  "num-layers": 40,
-  "hidden-size": 5120,
-  "num-attention-heads": 40,
-  "seq-length": 2048,
-  "max-position-embeddings": 2048,
+  "eval_tasks":[
+                "hellaswag",
+                "lambada_openai",
+                "piqa",
+                "truthfulqa_mc",
+                "winogrande",
+                "mathqa",
+                "pubmedqa",
+                "ocnli",
+                "lcsts",
+                "c3",
+                "webqa",
+                "cmqa",
+                "translate_zh2en",
+                "translate_en2zh"
+            ],
+
+  "num-layers": 12,
+  "hidden-size": 768,
+  "num-attention-heads": 12,
+  "seq-length": 512,
+  "max-position-embeddings": 512,
   "norm": "layernorm",
   "pos-emb": "rotary",
   "rotary_pct": 0.25,
@@ -37,10 +55,6 @@
       },
 
   "min_lr": 0.97e-5,
-
-  "eval_tasks":[
-                "webqa",
-            ],
 
   "zero_optimization": {
   "stage": 1,
@@ -76,15 +90,15 @@
     "min_loss_scale": 1
     },
 
-  "train-iters": 100,
-  "lr-decay-iters": 100,
+  "train-iters": 10000,
+  "lr-decay-iters": 1000,
 
   "distributed-backend": "nccl",
   "lr-decay-style": "cosine",
-  "warmup": 0.01,
-  "checkpoint-factor": 10, 
-  "eval-interval": 50,
-  "eval-iters": 50,
+  "warmup": 0.06,
+  "checkpoint-factor": 1000, 
+  "eval-interval": 100,
+  "eval-iters": 100,
 
   "log-interval": 1,
   "steps_per_print": 1,

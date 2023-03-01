@@ -16,23 +16,53 @@
 # limitations under the License.
 
 """Evaluation tasks - modified from https://github.com/EleutherAI/lm-evaluation-harness"""
+from megatron import print_rank_0
+from megatron.initialize import initialize_megatron
+from megatron.training import setup_model_and_optimizer
+from megatron.neox_arguments import NeoXArgs
+import json
+from datetime import datetime
+from pprint import pprint
+from eval_tasks import run_eval_harness
+from megatron.logging import tb_wandb_log
+from megatron.utils import setup_for_inference_or_eval, init_wandb
+from megatron.training import forward_step
 import os
 import sys
 
 sys.path.append(
     os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir))
 )
-from megatron.training import forward_step
-from megatron.utils import setup_for_inference_or_eval, init_wandb
-from megatron.logging import tb_wandb_log
-from eval_tasks import run_eval_harness
-from pprint import pprint
-from datetime import datetime
-import json
 
 
 def main():
-    model, neox_args = setup_for_inference_or_eval(use_cache=False)
+
+    neox_args = NeoXArgs.consume_deepy_args()
+    deepspeed_main_args = neox_args.get_deepspeed_main_args()
+    args = deepspeed_main_args[2:]
+
+    # 传入我们生成的参数列表
+    neox_args = NeoXArgs.consume_neox_args(args=args)
+    neox_args.configure_distributed_args()
+    # tokenizer needs to be build in training in order to set the padding vocab
+    neox_args.build_tokenizer()
+    # is initialized if tensorboard directory is defined
+    neox_args.initialize_tensorboard_writer()
+
+    initialize_megatron(neox_args=neox_args)
+
+    use_cache = False
+    model, _, _ = setup_model_and_optimizer(
+        neox_args=neox_args,
+        use_cache=use_cache,
+        iteration=neox_args.iteration,
+    )  # we use setup_model_and_optimizer instead of get_model in order to initialize deepspeed
+    print_rank_0("Finished loading model")
+
+    model.module.inference_mode(use_cache=use_cache)
+
+    # model, neox_args = setup_for_inference_or_eval(use_cache=False)
+
     results = run_eval_harness(
         model,
         forward_step,
